@@ -3,13 +3,12 @@ import CategoryPageProduct from '../models/categoryPageProduct';
 
 export const getCategoryProducts = async (req: Request, res: Response) => {
   try {
-    const { gender } = req.params;
-    const { search, categories, minPrice, maxPrice, ratings, limit = '15' } = req.query;
+    // const { gender } = req.params;
+    const { gender, search, categories, minPrice, maxPrice, ratings, limit = '15' } = req.query;
 
     const query: any = {};
 
-    // Gender (required param)
-    if (!gender || !['male', 'female', 'all'].includes(gender)) {
+    if (!gender || !['male', 'female', 'all'].includes(gender as string)) {
       res.status(400).json({
         success: false,
         message: 'Invalid gender parameter. Use "male", "female", or "all"',
@@ -23,6 +22,7 @@ export const getCategoryProducts = async (req: Request, res: Response) => {
     }
 
     // Search filter
+    console.log("req.query", req.query)
     if (search) {
       query.$or = [
         { name: { $regex: search as string, $options: 'i' } },
@@ -33,6 +33,7 @@ export const getCategoryProducts = async (req: Request, res: Response) => {
     // Category filter
     if (categories && categories !== 'all') {
       const categoryList = (categories as string).split(',');
+      console.log("categoryList", categoryList)
       query.category = { $in: categoryList };
     }
 

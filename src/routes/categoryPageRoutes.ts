@@ -3,7 +3,6 @@ import { getCategoryProducts } from '../controllers/categoryPageController';
 
 const router = express.Router();
 
-// GET /api/category-products/:gender?search=&categories=&minPrice=&maxPrice=&ratings=&limit=
-router.get('/:gender', getCategoryProducts);
+router.get('/', getCategoryProducts);
 
 export default router;
