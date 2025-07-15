@@ -4,7 +4,7 @@ import CategoryPageProduct from '../models/categoryPageProduct';
 export const getCategoryProducts = async (req: Request, res: Response) => {
   try {
     // const { gender } = req.params;
-    const { gender, search, categories, minPrice, maxPrice, ratings, limit = '15' } = req.query;
+    const { gender, search, categories, minPrice, maxPrice, ratings, limit = '10', page = '1' } = req.query;
 
     const query: any = {};
 
@@ -22,7 +22,6 @@ export const getCategoryProducts = async (req: Request, res: Response) => {
     }
 
     // Search filter
-    console.log("req.query", req.query)
     if (search) {
       query.$or = [
         { name: { $regex: search as string, $options: 'i' } },
@@ -32,9 +31,13 @@ export const getCategoryProducts = async (req: Request, res: Response) => {
 
     // Category filter
     if (categories && categories !== 'all') {
-      const categoryList = (categories as string).split(',');
-      console.log("categoryList", categoryList)
-      query.category = { $in: categoryList };
+      const categoryList = (categories as string).split(',').map((cat) => cat.trim());
+      query.$or = [
+        { category: { $regex: categoryList.join('|'), $options: 'i' } },
+        { subCategory: { $regex: categoryList.join('|'), $options: 'i' } },
+        { name: { $regex: categoryList.join('|'), $options: 'i' } },
+        { title: { $regex: categoryList.join('|'), $options: 'i' } }
+      ];
     }
 
     // Price filter
@@ -52,7 +55,15 @@ export const getCategoryProducts = async (req: Request, res: Response) => {
     }
 
     const limitValue = parseInt(limit as string, 10);
-    const products = await CategoryPageProduct.find(query).limit(limitValue);
+    const pageValue = parseInt(page as string, 10);
+    const skipValue = (pageValue - 1) * limitValue;
+
+    const [products, totalCount] = await Promise.all([
+      CategoryPageProduct.find(query).skip(skipValue).limit(limitValue),
+      CategoryPageProduct.countDocuments(query)
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limitValue);
 
     const organizedProducts = {
       clothing: products.filter((product) => product.type === 'clothing'),
@@ -62,6 +73,12 @@ export const getCategoryProducts = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       data: organizedProducts,
+      pagination: {
+        totalCount,
+        totalPages,
+        currentPage: pageValue,
+        limit: limitValue
+      }
     });
   } catch (error) {
     res.status(500).json({

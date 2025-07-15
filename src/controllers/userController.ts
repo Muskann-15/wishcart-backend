@@ -7,8 +7,6 @@ export class UserController {
   async getUserDetails(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = req.user?.userId;
-      console.log("userId", userId)
-
       if (!userId) {
         res.status(401).json({
           success: false,
