@@ -3,7 +3,6 @@ import CategoryPageProduct from '../models/categoryPageProduct';
 
 export const getCategoryProducts = async (req: Request, res: Response) => {
   try {
-    // const { gender } = req.params;
     const { gender, search, categories, minPrice, maxPrice, ratings, limit = '10', page = '1' } = req.query;
 
     const query: any = {};
